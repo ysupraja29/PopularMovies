@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.subhrajyoti.movies.MainActivity">
+
+    <item android:id="@+id/fav"
+        android:title="@string/fav_button_add"
+        app:ico_color="@color/white"
+        app:ico_icon="gmi_favorite"
+        app:ico_size="24dp"
+        app:showAsAction="always"
+        android:visible="false">
+    </item>
+    <item android:id="@+id/share"
+        app:ico_color="@color/white"
+        app:ico_icon="gmi_share"
+        app:ico_size="24dp"
+        android:title="@string/share_menu"
+        app:showAsAction="always"
+        android:visible="false">
+    </item>
+    <item android:id="@+id/action_sort_by"
+        app:ico_color="@color/white"
+        app:ico_icon="gmi_sort"
+        app:ico_size="24dp"
+        android:title="@string/sort_menu"
+        app:showAsAction="ifRoom">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item android:id="@+id/action_sort_by_popularity"
+                    android:title="@string/sort_option_popularity" />
+                <item android:id="@+id/action_sort_by_rating"
+                    android:title="@string/sort_option_rated" />
+                <item android:id="@+id/action_sort_by_favourite"
+                    android:title="@string/sort_option_favourite" />
+            </group>
+        </menu>
+    </item>
+</menu>
