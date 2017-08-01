@@ -1,83 +1,82 @@
-package com.janardhan_y.popular_movies_master.common;
+package com.supraja_y.popularmovies.common;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
-import com.janardhan_y.popular_movies_master.models.Movie;
-import com.janardhan_y.popular_movies_master.models.Review;
-import com.janardhan_y.popular_movies_master.models.Trailer;
+import com.supraja_y.popularmovies.POJOS.movModel;
+import com.supraja_y.popularmovies.POJOS.revModel;
+import com.supraja_y.popularmovies.POJOS.traModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-
 public class FavoritesStorage {
-    public static void addFavorite(Context context, Movie movie,
-                                   ArrayList<Trailer> trailerList, ArrayList<Review> reviewList) {
+    public static void addFavorite(Context context, movModel movie,
+                                   ArrayList<traModel> trailerList, ArrayList<revModel> reviewList) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        contentResolver.delete(Movie.Contract.CONTENT_URI,
-                Movie.Contract.MOVIE_ID + "= ?", new String[]{movie.Id});
+        contentResolver.delete(movModel.Contract.CONTENT_URI,
+                movModel.Contract.MOVIE_ID + "= ?", new String[]{movie.getId()});
 
         ContentValues movieValues = new ContentValues();
-        movieValues.put(Movie.Contract.MOVIE_ID, movie.Id);
-        movieValues.put(Movie.Contract.BACKDROP_PATH, movie.BackdropPath);
-        movieValues.put(Movie.Contract.ORIGINAL_TITLE, movie.OriginalTitle);
-        movieValues.put(Movie.Contract.OVERVIEW, movie.Overview);
-        movieValues.put(Movie.Contract.POSTER_PATH, movie.PosterPath);
-        movieValues.put(Movie.Contract.RELEASE_DATE, movie.ReleaseDate);
-        movieValues.put(Movie.Contract.VOTE_AVERAGE, movie.VoteAverage);
-        contentResolver.insert(Movie.Contract.CONTENT_URI, movieValues);
+        movieValues.put(movModel.Contract.MOVIE_ID, movie.getId());
+        movieValues.put(movModel.Contract.BACKDROP_PATH, movie.getBackdrop_path());
+        movieValues.put(movModel.Contract.ORIGINAL_TITLE, movie.getoriginal_title());
+        movieValues.put(movModel.Contract.OVERVIEW, movie.getOverview());
+        movieValues.put(movModel.Contract.POSTER_PATH, movie.getposter_path());
+        movieValues.put(movModel.Contract.RELEASE_DATE, movie.getrelease_date());
+        movieValues.put(movModel.Contract.VOTE_AVERAGE, movie.getvote_average());
+        contentResolver.insert(movModel.Contract.CONTENT_URI, movieValues);
 
-        saveTrailersOfFavoriteMovie(context, movie.Id, trailerList);
-        saveReviewsOfFavoriteMovie(context, movie.Id, reviewList);
+        saveTrailersOfFavoritemovModel(context, movie.getId(), trailerList);
+        saveReviewsOfFavoritemovModel(context, movie.getId(), reviewList);
     }
 
-    public static void saveReviewsOfFavoriteMovie(Context context, String movieId, List<Review> reviewList) {
+    public static void saveReviewsOfFavoritemovModel(Context context, String movieId, List<revModel> reviewList) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        contentResolver.delete(Review.Contract.CONTENT_URI,
-                Review.Contract.MOVIE_ID + "= ?", new String[]{movieId});
+        contentResolver.delete(revModel.Contract.CONTENT_URI,
+                revModel.Contract.MOVIE_ID + "= ?", new String[]{movieId});
 
         if (reviewList != null && reviewList.size() != 0) {
             ArrayList<ContentValues> reviewListValues = new ArrayList<>();
-            for (Review review : reviewList) {
+            for (revModel review : reviewList) {
                 ContentValues reviewValues = new ContentValues();
-                reviewValues.put(Review.Contract.MOVIE_ID, movieId);
-                reviewValues.put(Review.Contract.AUTHOR, review.Author);
-                reviewValues.put(Review.Contract.CONTENT, review.Content);
+                reviewValues.put(revModel.Contract.MOVIE_ID, movieId);
+                reviewValues.put(revModel.Contract.AUTHOR, review.getAuthor());
+                reviewValues.put(revModel.Contract.CONTENT, review.getcontent());
                 reviewListValues.add(reviewValues);
             }
             if (reviewListValues.size() != 0) {
                 ContentValues[] reviewListArray = new ContentValues[reviewListValues.size()];
                 reviewListValues.toArray(reviewListArray);
-                contentResolver.bulkInsert(Review.Contract.CONTENT_URI, reviewListArray);
+                contentResolver.bulkInsert(revModel.Contract.CONTENT_URI, reviewListArray);
             }
         }
     }
 
-    public static void saveTrailersOfFavoriteMovie(Context context, String movieId, List<Trailer> trailerList) {
+    public static void saveTrailersOfFavoritemovModel(Context context, String movieId, List<traModel> trailerList) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        contentResolver.delete(Trailer.Contract.CONTENT_URI,
-                Trailer.Contract.MOVIE_ID + "= ?", new String[]{movieId});
+        contentResolver.delete(traModel.Contract.CONTENT_URI,
+                traModel.Contract.MOVIE_ID + "= ?", new String[]{movieId});
 
         if (trailerList != null && trailerList.size() != 0) {
             ArrayList<ContentValues> trailerListValues = new ArrayList<>();
-            for (Trailer trailer : trailerList) {
+            for (traModel trailer : trailerList) {
                 ContentValues trailerValues = new ContentValues();
-                trailerValues.put(Trailer.Contract.MOVIE_ID, movieId);
-                trailerValues.put(Trailer.Contract.KEY, trailer.Key);
-                trailerValues.put(Trailer.Contract.NAME, trailer.Name);
+                trailerValues.put(traModel.Contract.MOVIE_ID, movieId);
+                trailerValues.put(traModel.Contract.KEY, trailer.getKey());
+                trailerValues.put(traModel.Contract.NAME, trailer.getName());
                 trailerListValues.add(trailerValues);
             }
             if (trailerListValues.size() != 0) {
                 ContentValues[] trailerListArray = new ContentValues[trailerListValues.size()];
                 trailerListValues.toArray(trailerListArray);
-                contentResolver.bulkInsert(Trailer.Contract.CONTENT_URI, trailerListArray);
+                contentResolver.bulkInsert(traModel.Contract.CONTENT_URI, trailerListArray);
             }
         }
     }
@@ -85,20 +84,20 @@ public class FavoritesStorage {
     public static void removeFavorite(Context context, String movieId) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        contentResolver.delete(Movie.Contract.CONTENT_URI,
-                Movie.Contract.MOVIE_ID + "= ?", new String[]{movieId});
+        contentResolver.delete(movModel.Contract.CONTENT_URI,
+                movModel.Contract.MOVIE_ID + "= ?", new String[]{movieId});
 
-        contentResolver.delete(Trailer.Contract.CONTENT_URI,
-                Trailer.Contract.MOVIE_ID + "= ?", new String[]{movieId});
+        contentResolver.delete(traModel.Contract.CONTENT_URI,
+                traModel.Contract.MOVIE_ID + "= ?", new String[]{movieId});
 
-        contentResolver.delete(Review.Contract.CONTENT_URI,
-                Review.Contract.MOVIE_ID + "= ?", new String[]{movieId});
+        contentResolver.delete(revModel.Contract.CONTENT_URI,
+                revModel.Contract.MOVIE_ID + "= ?", new String[]{movieId});
     }
 
     public static boolean isFavorite(Context context, String movieId) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        final Cursor cursor = contentResolver.query(Movie.Contract.CONTENT_URI, new String[]{Movie.Contract._ID}, Movie.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
+        final Cursor cursor = contentResolver.query(movModel.Contract.CONTENT_URI, new String[]{movModel.Contract._ID}, movModel.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
         if (cursor == null) {
             return false;
         } else if (cursor.getCount() < 1) {
@@ -111,20 +110,20 @@ public class FavoritesStorage {
     }
 
     private static final String[] TRAILER_PROJECTION = new String[]{
-            Trailer.Contract.KEY,
-            Trailer.Contract.NAME,
+            traModel.Contract.KEY,
+            traModel.Contract.NAME,
     };
 
     // these indices must match the projection TRAILER_PROJECTION that don't use getColumnIndex() method
     private static final int INDEX_TRAILER_KEY = 0;
     private static final int INDEX_TRAILER_NAME = 1;
 
-    public static ArrayList<Trailer> getTrailerOfFavoriteMovie(Context context, String movieId) {
+    public static ArrayList<traModel> getTrailerOfFavoritemovModel(Context context, String movieId) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        ArrayList<Trailer> trailerList = new ArrayList<>();
+        ArrayList<traModel> trailerList = new ArrayList<>();
 
-        final Cursor cursor = contentResolver.query(Trailer.Contract.CONTENT_URI, TRAILER_PROJECTION, Trailer.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
+        final Cursor cursor = contentResolver.query(traModel.Contract.CONTENT_URI, TRAILER_PROJECTION, traModel.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
 
         if (cursor == null) {
             return trailerList;
@@ -133,11 +132,11 @@ public class FavoritesStorage {
             return trailerList;
         }
 
-        Trailer trailer;
+        traModel trailer;
         while (cursor.moveToNext()) {
-            trailer = new Trailer();
-            trailer.Key = cursor.getString(INDEX_TRAILER_KEY);
-            trailer.Name = cursor.getString(INDEX_TRAILER_NAME);
+            trailer = new traModel();
+            trailer.setKey(cursor.getString(INDEX_TRAILER_KEY));
+            trailer.setName(cursor.getString(INDEX_TRAILER_NAME));
             trailerList.add(trailer);
         }
         cursor.close();
@@ -146,20 +145,20 @@ public class FavoritesStorage {
     }
 
     private static final String[] REVIEW_PROJECTION = new String[]{
-            Review.Contract.AUTHOR,
-            Review.Contract.CONTENT,
+            revModel.Contract.AUTHOR,
+            revModel.Contract.CONTENT,
     };
 
     // these indices must match the projection REVIEW_PROJECTION that don't use getColumnIndex() method
     private static final int INDEX_REVIEW_AUTHOR = 0;
     private static final int INDEX_REVIEW_CONTENT = 1;
 
-    public static ArrayList<Review> getReviewOfFavoriteMovie(Context context, String movieId) {
+    public static ArrayList<revModel> getReviewOfFavoritemovModel(Context context, String movieId) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        ArrayList<Review> reviewList = new ArrayList<>();
+        ArrayList<revModel> reviewList = new ArrayList<>();
 
-        final Cursor cursor = contentResolver.query(Review.Contract.CONTENT_URI, REVIEW_PROJECTION, Review.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
+        final Cursor cursor = contentResolver.query(revModel.Contract.CONTENT_URI, REVIEW_PROJECTION, revModel.Contract.MOVIE_ID + "= ?", new String[]{movieId}, "");
 
         if (cursor == null) {
             return reviewList;
@@ -168,11 +167,11 @@ public class FavoritesStorage {
             return reviewList;
         }
 
-        Review review;
+        revModel review;
         while (cursor.moveToNext()) {
-            review = new Review();
-            review.Author = cursor.getString(INDEX_REVIEW_AUTHOR);
-            review.Content = cursor.getString(INDEX_REVIEW_CONTENT);
+            review = new revModel();
+            review.setAuthor(cursor.getString(INDEX_REVIEW_AUTHOR));
+            review.setContent(cursor.getString(INDEX_REVIEW_CONTENT));
             reviewList.add(review);
         }
         cursor.close();
@@ -181,13 +180,13 @@ public class FavoritesStorage {
     }
 
     private static final String[] MOVIE_PROJECTION = new String[]{
-            Movie.Contract.MOVIE_ID,
-            Movie.Contract.BACKDROP_PATH,
-            Movie.Contract.ORIGINAL_TITLE,
-            Movie.Contract.OVERVIEW,
-            Movie.Contract.POSTER_PATH,
-            Movie.Contract.RELEASE_DATE,
-            Movie.Contract.VOTE_AVERAGE
+            movModel.Contract.MOVIE_ID,
+            movModel.Contract.BACKDROP_PATH,
+            movModel.Contract.ORIGINAL_TITLE,
+            movModel.Contract.OVERVIEW,
+            movModel.Contract.POSTER_PATH,
+            movModel.Contract.RELEASE_DATE,
+            movModel.Contract.VOTE_AVERAGE
     };
 
     // these indices must match the projection MOVIE_PROJECTION that don't use getColumnIndex() method
@@ -199,12 +198,12 @@ public class FavoritesStorage {
     private static final int INDEX_RELEASE_DATE = 5;
     private static final int INDEX_VOTE_AVERAGE = 6;
 
-    public static ArrayList<Movie> getFavorites(Context context) {
+    public static ArrayList<movModel> getFavorites(Context context) {
         final ContentResolver contentResolver = context.getContentResolver();
 
-        ArrayList<Movie> movieList = new ArrayList<>();
+        ArrayList<movModel> movieList = new ArrayList<>();
 
-        final Cursor cursor = contentResolver.query(Movie.Contract.CONTENT_URI, MOVIE_PROJECTION, null, null, "");
+        final Cursor cursor = contentResolver.query(movModel.Contract.CONTENT_URI, MOVIE_PROJECTION, null, null, "");
 
         if (cursor == null) {
             return movieList;
@@ -213,16 +212,16 @@ public class FavoritesStorage {
             return movieList;
         }
 
-        Movie movie;
+        movModel movie;
         while (cursor.moveToNext()) {
-            movie = new Movie();
-            movie.Id = cursor.getString(INDEX_MOVIE_ID);
-            movie.BackdropPath = cursor.getString(INDEX_BACKDROP_PATH);
-            movie.OriginalTitle = cursor.getString(INDEX_ORIGINAL_TITLE);
-            movie.Overview = cursor.getString(INDEX_OVERVIEW);
-            movie.PosterPath = cursor.getString(INDEX_POSTER_PATH);
-            movie.ReleaseDate = cursor.getString(INDEX_RELEASE_DATE);
-            movie.VoteAverage = cursor.getString(INDEX_VOTE_AVERAGE);
+            movie = new movModel();
+            movie.setId(cursor.getString(INDEX_MOVIE_ID));
+            movie.setBackdrop_path(cursor.getString(INDEX_BACKDROP_PATH));
+            movie.setOriginal_title(cursor.getString(INDEX_ORIGINAL_TITLE));
+            movie.setOverview(cursor.getString(INDEX_OVERVIEW));
+            movie.setPoster_path(cursor.getString(INDEX_POSTER_PATH));
+            movie.setRelease_date(cursor.getString(INDEX_RELEASE_DATE));
+            movie.setVote_average(Float.parseFloat(cursor.getString(INDEX_VOTE_AVERAGE)));
             movieList.add(movie);
         }
         cursor.close();

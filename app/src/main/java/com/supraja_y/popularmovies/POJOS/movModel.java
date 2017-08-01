@@ -1,17 +1,51 @@
 package com.supraja_y.popularmovies.POJOS;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import io.realm.RealmObject;
+import com.google.gson.annotations.SerializedName;
+import com.supraja_y.popularmovies.providers.MovieDbProvider;
+import com.tjeannin.provigen.ProviGenBaseContract;
+import com.tjeannin.provigen.annotation.Column;
+import com.tjeannin.provigen.annotation.ContentUri;
 
-public class movModel extends RealmObject implements Parcelable{
+public class movModel implements Parcelable{
 
     private String release_date;
     private String original_title;
     private String poster_path;
     private String overview;
     private float vote_average;
+
+    public void setRelease_date(String release_date) {
+        this.release_date = release_date;
+    }
+
+    public void setOriginal_title(String original_title) {
+        this.original_title = original_title;
+    }
+
+    public void setPoster_path(String poster_path) {
+        this.poster_path = poster_path;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
+    }
+
+    public void setVote_average(float vote_average) {
+        this.vote_average = vote_average;
+    }
+
+    public void setBackdrop_path(String backdrop_path) {
+        this.backdrop_path = backdrop_path;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     private String backdrop_path;
     private String id;
 
@@ -111,6 +145,33 @@ public class movModel extends RealmObject implements Parcelable{
     }
 
 
+    /**
+     * Contract for DB and content provider
+     */
+    public interface Contract extends ProviGenBaseContract {
+        @Column(Column.Type.TEXT)
+        String MOVIE_ID = "movie_id";
 
+        @Column(Column.Type.TEXT)
+        String ORIGINAL_TITLE = "original_title";
+
+        @Column(Column.Type.TEXT)
+        String OVERVIEW = "overview";
+
+        @Column(Column.Type.TEXT)
+        String VOTE_AVERAGE = "vote_average";
+
+        @Column(Column.Type.TEXT)
+        String RELEASE_DATE = "release_date";
+
+        @Column(Column.Type.TEXT)
+        String BACKDROP_PATH = "backdrop_path";
+
+        @Column(Column.Type.TEXT)
+        String POSTER_PATH = "poster_path";
+
+        @ContentUri
+        Uri CONTENT_URI = MovieDbProvider.getContentUri("movies");
+    }
 
 }

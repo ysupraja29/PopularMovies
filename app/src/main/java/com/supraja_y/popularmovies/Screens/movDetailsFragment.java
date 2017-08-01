@@ -31,19 +31,19 @@ import com.supraja_y.popularmovies.Adapters.revAdapter;
 import com.supraja_y.popularmovies.Adapters.traAdapter;
 import com.supraja_y.popularmovies.Application.Application;
 import com.supraja_y.popularmovies.BuildConfig;
+import com.supraja_y.popularmovies.Listener.RecyclerClickListener;
 import com.supraja_y.popularmovies.POJOS.movModel;
 import com.supraja_y.popularmovies.POJOS.revModel;
 import com.supraja_y.popularmovies.POJOS.traModel;
 import com.supraja_y.popularmovies.R;
-import com.supraja_y.popularmovies.Listener.RecyclerClickListener;
 import com.supraja_y.popularmovies.RetroFit.MovieDBAPI;
+import com.supraja_y.popularmovies.common.FavoritesStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import io.realm.Realm;
 import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
@@ -52,8 +52,8 @@ import retrofit.Retrofit;
 public class movDetailsFragment extends Fragment {
 
 
-    private IconicsDrawable outline_fav_drawable;
-    private IconicsDrawable fav_drawable;
+    private boolean isFavoriteMovie;
+    private Callbacks mCallbacks = sDummyCallbacks;
 
 
     public movDetailsFragment() {
@@ -88,12 +88,45 @@ public class movDetailsFragment extends Fragment {
 
     revAdapter reviewAdapter;
     traAdapter traAdapter;
-    Realm realm = Realm.getDefaultInstance();
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        if (!(activity instanceof Callbacks)) {
+            return;
+        }
+
+        mCallbacks = (Callbacks) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        // Reset the active callbacks interface to the dummy implementation.
+        mCallbacks = sDummyCallbacks;
+    }
+
+    public interface Callbacks {
+        void onChangedFavoriteStatus();
+    }
+
+    /**
+     * A dummy implementation of the {@link Callbacks} interface that does
+     * nothing. Used only when this fragment is not attached to an activity.
+     */
+    private static final Callbacks sDummyCallbacks = new Callbacks() {
+        @Override
+        public void onChangedFavoriteStatus() {
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
         if (getArguments().containsKey("movie")) {
 
             Activity activity = this.getActivity();
@@ -115,14 +148,7 @@ public class movDetailsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.mov_details, container, false);
         ButterKnife.bind(this, rootView);
-        outline_fav_drawable = new IconicsDrawable(getActivity())
-                .icon(MaterialDesignIconic.Icon.gmi_favorite_outline)
-                .color(Color.WHITE)
-                .sizeDp(24);
-        fav_drawable = new IconicsDrawable(getActivity())
-                .icon(MaterialDesignIconic.Icon.gmi_favorite)
-                .color(Color.WHITE)
-                .sizeDp(24);
+
         titleView.setText(movModel.getoriginal_title());
 
         Picasso.with(getActivity()).load(BuildConfig.IMAGE_URL + "/w342" + movModel.getposter_path() + "?api_key?=" + BuildConfig.API_KEY).placeholder(R.drawable.placeholder).error(R.drawable.placeholder).into(imageView);
@@ -171,7 +197,13 @@ public class movDetailsFragment extends Fragment {
         MenuItem item = menu.findItem(R.id.fav);
         MenuItem item_share = menu.findItem(R.id.share);
         item.setVisible(true);
-        item.setIcon(!isFavourite() ? outline_fav_drawable:fav_drawable);
+        item.setIcon(!isFavourite() ? new IconicsDrawable(getActivity())
+                .icon(MaterialDesignIconic.Icon.gmi_favorite_outline)
+                .color(Color.WHITE)
+                .sizeDp(24) : new IconicsDrawable(getActivity())
+                .icon(MaterialDesignIconic.Icon.gmi_favorite)
+                .color(Color.WHITE)
+                .sizeDp(24));
         item_share.setIcon(new IconicsDrawable(getContext()).icon(MaterialDesignIconic.Icon.gmi_share)
                 .color(Color.WHITE)
                 .sizeDp(24));
@@ -191,21 +223,8 @@ public class movDetailsFragment extends Fragment {
 
 
             case R.id.fav:
-                if (realm.isInTransaction())
-                    realm.cancelTransaction();
-                if (!isFavourite()) {
-                    realm.beginTransaction();
-                    item.setIcon(fav_drawable);
-                    realm.copyToRealm(movModel);
-                    realm.commitTransaction();
+                new FavoriteActionAsyncTask(getActivity(), item).execute();
 
-                } else {
-                    realm.beginTransaction();
-                    item.setIcon(outline_fav_drawable);
-                    realm.where(movModel.class).contains("id", movModel.getId()).findFirst().deleteFromRealm();
-                    realm.commitTransaction();
-
-                }
                 break;
 
 
@@ -213,10 +232,59 @@ public class movDetailsFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    private class FavoriteActionAsyncTask extends AsyncTask<Void, Void, Boolean> {
+        final Context mContext;
+        MenuItem mitem;
+
+        public FavoriteActionAsyncTask(Context context, MenuItem item) {
+            mContext = context;
+            mitem = item;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            final IconicsDrawable drawable;
+            if (FavoritesStorage.isFavorite(getActivity(), movModel.getId())) {
+                drawable=new IconicsDrawable(getActivity())
+                        .icon(MaterialDesignIconic.Icon.gmi_favorite_outline)
+                        .color(Color.WHITE)
+                        .sizeDp(24);
+
+                FavoritesStorage.removeFavorite(getActivity(), movModel.getId());
+            } else {
+                drawable   = new IconicsDrawable(getActivity())
+                        .icon(MaterialDesignIconic.Icon.gmi_favorite)
+                        .color(Color.WHITE)
+                        .sizeDp(24);
+                FavoritesStorage.addFavorite(getActivity(), movModel, trailerList, reviewList);
+            }
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mitem.setIcon(drawable);
+
+                }
+            });
+
+
+            return FavoritesStorage.isFavorite(getActivity(), movModel.getId());
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isFavoriteMovie) {
+            if (mContext == null) {
+                return;
+            }
+            mCallbacks.onChangedFavoriteStatus();
+
+        }
+    }
+
 
     private boolean isFavourite() {
 
-        return realm.where(movModel.class).contains("id", movModel.getId()).findAll().size() != 0;
+
+        return FavoritesStorage.isFavorite(getActivity(), movModel.getId());
     }
 
     private class FetchReviews extends AsyncTask<String, Void, List<revModel>> {

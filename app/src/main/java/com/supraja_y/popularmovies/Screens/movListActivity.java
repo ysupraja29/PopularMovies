@@ -26,25 +26,23 @@ import com.mikepenz.material_design_iconic_typeface_library.MaterialDesignIconic
 import com.supraja_y.popularmovies.Adapters.movAdapter;
 import com.supraja_y.popularmovies.Application.Application;
 import com.supraja_y.popularmovies.BuildConfig;
+import com.supraja_y.popularmovies.Listener.RecyclerClickListener;
 import com.supraja_y.popularmovies.POJOS.movModel;
 import com.supraja_y.popularmovies.R;
-import com.supraja_y.popularmovies.Listener.RecyclerClickListener;
 import com.supraja_y.popularmovies.RetroFit.MovieDBAPI;
+import com.supraja_y.popularmovies.common.FavoritesStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import io.realm.Realm;
-import io.realm.RealmChangeListener;
-import io.realm.RealmResults;
 import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
 
 
-public class movListActivity extends AppCompatActivity {
+public class movListActivity extends AppCompatActivity implements movDetailsFragment.Callbacks {
 
     ArrayList<movModel> popularArrayList;
     ArrayList<movModel> ratedArrayList;
@@ -62,7 +60,6 @@ public class movListActivity extends AppCompatActivity {
 
     GridLayoutManager gridLayoutManager;
     private boolean mTwoPane;
-    Realm realm = Realm.getDefaultInstance();
     String SORT_BY = "POPULAR_MOVIES";
     NetworkReceiver networkReceiver;
     @Bind(R.id.recyclerView)
@@ -104,13 +101,6 @@ public class movListActivity extends AppCompatActivity {
         }
         setupRView();
 
-
-        realm.addChangeListener(new RealmChangeListener() {
-            @Override
-            public void onChange() {
-                getFavourites();
-            }
-        });
         recyclerView.addOnItemTouchListener(new RecyclerClickListener(this, new RecyclerClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
@@ -147,6 +137,30 @@ public class movListActivity extends AppCompatActivity {
         }));
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if(SORT_BY.equals("FAVOURITE_MOVIES"))
+        {
+
+
+                getFavourites();
+
+        }
+    }
+
+    @Override
+    public void onChangedFavoriteStatus() {
+        Log.e("from mov_listActivity","true");
+        if (mTwoPane) {
+
+            getFavourites();
+
+        }
+    }
+
 
     private class FetchMoviesFromAPI extends AsyncTask<String, Void,
             List<movModel>> {
@@ -241,9 +255,9 @@ public class movListActivity extends AppCompatActivity {
                 SORT_BY = "POPULAR_MOVIES";
                 break;
             case R.id.action_sort_by_favourite:
-                recyclerView.setAdapter(favouriteAdapter);
-                SORT_BY = "FAVOURITE_MOVIES";
                 getFavourites();
+                SORT_BY = "FAVOURITE_MOVIES";
+
                 break;
 
 
@@ -296,14 +310,11 @@ public class movListActivity extends AppCompatActivity {
     }
 
     public void getFavourites() {
-        RealmResults<movModel> realmResults = realm.where(movModel.class).findAll();
-        Log.d("Size", String.valueOf(realmResults.size()));
         favArrayList.clear();
-        for (int i = 0; i < realmResults.size(); i++) {
-            favArrayList.add(realmResults.get(i));
-            Log.d("fav add", realmResults.get(i).getoriginal_title());
-        }
-        favouriteAdapter.notifyDataSetChanged();
+        favArrayList = FavoritesStorage.getFavorites(this);
+        Log.d("Size", String.valueOf(favArrayList.size()));
+        favouriteAdapter = new movAdapter(this, favArrayList);
+        recyclerView.setAdapter(favouriteAdapter);
         Log.d("Array Size", String.valueOf(favArrayList.size()));
     }
 
