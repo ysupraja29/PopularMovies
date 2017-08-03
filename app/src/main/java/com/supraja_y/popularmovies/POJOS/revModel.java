@@ -1,16 +1,11 @@
 package com.supraja_y.popularmovies.POJOS;
 
 
-import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.supraja_y.popularmovies.providers.MovieDbProvider;
-import com.tjeannin.provigen.ProviGenBaseContract;
-import com.tjeannin.provigen.annotation.Column;
-import com.tjeannin.provigen.annotation.ContentUri;
-
-public class revModel implements Parcelable {
+public class revModel implements Parcelable
+{
 
 
     public String getId() {
@@ -70,39 +65,13 @@ public class revModel implements Parcelable {
 
 
     }
+
     public revModel() {
     }
+
     public revModel(Parcel in) {
         id = in.readString();
         author = in.readString();
         content = in.readString();
-    }
-
-    public static final Creator<revModel> CREATOR = new Creator<revModel>() {
-        @Override
-        public revModel createFromParcel(Parcel in) {
-            return new revModel(in);
-        }
-
-        @Override
-        public revModel[] newArray(int size) {
-            return new revModel[size];
-        }
-    };
-    /**
-     * Contract for DB and content provider
-     */
-    public interface Contract extends ProviGenBaseContract {
-        @Column(Column.Type.TEXT)
-        String MOVIE_ID = "movie_id";
-
-        @Column(Column.Type.TEXT)
-        String AUTHOR = "author";
-
-        @Column(Column.Type.TEXT)
-        String CONTENT = "content";
-
-        @ContentUri
-        Uri CONTENT_URI = MovieDbProvider.getContentUri("reviews");
     }
 }

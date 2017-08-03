@@ -52,7 +52,6 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
     compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
     compile "com.mikepenz:iconics-core:2.9.0@aar"
-    compile 'com.github.provigen:ProviGen-lib:2.0.1'
     compile 'com.mikepenz:google-material-typeface:3.0.1.1.original@aar'
     compile 'com.mikepenz:material-design-iconic-typeface:2.2.0.3@aar'
     testCompile 'junit:junit:4.12'

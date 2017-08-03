@@ -5,10 +5,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
-import com.supraja_y.popularmovies.providers.MovieDbProvider;
-import com.tjeannin.provigen.ProviGenBaseContract;
-import com.tjeannin.provigen.annotation.Column;
-import com.tjeannin.provigen.annotation.ContentUri;
 
 public class movModel implements Parcelable{
 
@@ -144,34 +140,5 @@ public class movModel implements Parcelable{
         return id;
     }
 
-
-    /**
-     * Contract for DB and content provider
-     */
-    public interface Contract extends ProviGenBaseContract {
-        @Column(Column.Type.TEXT)
-        String MOVIE_ID = "movie_id";
-
-        @Column(Column.Type.TEXT)
-        String ORIGINAL_TITLE = "original_title";
-
-        @Column(Column.Type.TEXT)
-        String OVERVIEW = "overview";
-
-        @Column(Column.Type.TEXT)
-        String VOTE_AVERAGE = "vote_average";
-
-        @Column(Column.Type.TEXT)
-        String RELEASE_DATE = "release_date";
-
-        @Column(Column.Type.TEXT)
-        String BACKDROP_PATH = "backdrop_path";
-
-        @Column(Column.Type.TEXT)
-        String POSTER_PATH = "poster_path";
-
-        @ContentUri
-        Uri CONTENT_URI = MovieDbProvider.getContentUri("movies");
-    }
 
 }

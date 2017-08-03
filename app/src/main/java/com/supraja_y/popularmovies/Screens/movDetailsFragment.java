@@ -1,8 +1,11 @@
 package com.supraja_y.popularmovies.Screens;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -37,7 +40,7 @@ import com.supraja_y.popularmovies.POJOS.revModel;
 import com.supraja_y.popularmovies.POJOS.traModel;
 import com.supraja_y.popularmovies.R;
 import com.supraja_y.popularmovies.RetroFit.MovieDBAPI;
-import com.supraja_y.popularmovies.common.FavoritesStorage;
+import com.supraja_y.popularmovies.data.MovieContract;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +55,8 @@ import retrofit.Retrofit;
 public class movDetailsFragment extends Fragment {
 
 
-    private boolean isFavoriteMovie;
     private Callbacks mCallbacks = sDummyCallbacks;
+    private ContentResolver contentResolver;
 
 
     public movDetailsFragment() {
@@ -148,6 +151,8 @@ public class movDetailsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.mov_details, container, false);
         ButterKnife.bind(this, rootView);
+        contentResolver = getActivity().getContentResolver();
+
 
         titleView.setText(movModel.getoriginal_title());
 
@@ -197,7 +202,7 @@ public class movDetailsFragment extends Fragment {
         MenuItem item = menu.findItem(R.id.fav);
         MenuItem item_share = menu.findItem(R.id.share);
         item.setVisible(true);
-        item.setIcon(!isFavourite() ? new IconicsDrawable(getActivity())
+        item.setIcon(!isFavorite(getContext(), Integer.parseInt(movModel.getId())) ? new IconicsDrawable(getActivity())
                 .icon(MaterialDesignIconic.Icon.gmi_favorite_outline)
                 .color(Color.WHITE)
                 .sizeDp(24) : new IconicsDrawable(getActivity())
@@ -244,20 +249,31 @@ public class movDetailsFragment extends Fragment {
         @Override
         protected Boolean doInBackground(Void... params) {
             final IconicsDrawable drawable;
-            if (FavoritesStorage.isFavorite(getActivity(), movModel.getId())) {
-                drawable=new IconicsDrawable(getActivity())
+            boolean isFav = isFavorite(getActivity(), Integer.parseInt(movModel.getId()));
+            if (!isFav) {
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MovieContract.MovieEntry.MOVIE_ID, movModel.getId());
+                contentValues.put(MovieContract.MovieEntry.TITLE, movModel.getoriginal_title());
+                contentValues.put(MovieContract.MovieEntry.OVERVIEW, movModel.getOverview());
+                contentValues.put(MovieContract.MovieEntry.RELEASE_DATE, movModel.getrelease_date());
+                contentValues.put(MovieContract.MovieEntry.VOTE_RATE, movModel.getvote_average());
+                contentValues.put(MovieContract.MovieEntry.POSTER_URL, movModel.getposter_path());
+
+                contentResolver.insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+                drawable = new IconicsDrawable(getActivity())
+                        .icon(MaterialDesignIconic.Icon.gmi_favorite )
+                        .color(Color.WHITE)
+                        .sizeDp(24);
+            } else {
+                contentResolver.delete(MovieContract.MovieEntry.CONTENT_URI, MovieContract.MovieEntry.MOVIE_ID + "=?", new String[]{movModel.getId()});
+
+                drawable = new IconicsDrawable(getActivity())
                         .icon(MaterialDesignIconic.Icon.gmi_favorite_outline)
                         .color(Color.WHITE)
                         .sizeDp(24);
-
-                FavoritesStorage.removeFavorite(getActivity(), movModel.getId());
-            } else {
-                drawable   = new IconicsDrawable(getActivity())
-                        .icon(MaterialDesignIconic.Icon.gmi_favorite)
-                        .color(Color.WHITE)
-                        .sizeDp(24);
-                FavoritesStorage.addFavorite(getActivity(), movModel, trailerList, reviewList);
             }
+
+
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -267,7 +283,7 @@ public class movDetailsFragment extends Fragment {
             });
 
 
-            return FavoritesStorage.isFavorite(getActivity(), movModel.getId());
+            return isFavorite(getActivity(), Integer.parseInt(movModel.getId()));
         }
 
         @Override
@@ -281,11 +297,17 @@ public class movDetailsFragment extends Fragment {
     }
 
 
-    private boolean isFavourite() {
+    public static boolean isFavorite(Context context, int id) { // Check if movie with passed id is favorite
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(MovieContract.MovieEntry.CONTENT_URI, null, MovieContract.MovieEntry.MOVIE_ID + "=?", new String[]{String.valueOf(id)}, null);
 
+        int found = cursor.getCount();
 
-        return FavoritesStorage.isFavorite(getActivity(), movModel.getId());
+        cursor.close();
+
+        return found != 0;
     }
+
 
     private class FetchReviews extends AsyncTask<String, Void, List<revModel>> {
 

@@ -1,15 +1,18 @@
 package com.supraja_y.popularmovies.Screens;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -30,7 +33,8 @@ import com.supraja_y.popularmovies.Listener.RecyclerClickListener;
 import com.supraja_y.popularmovies.POJOS.movModel;
 import com.supraja_y.popularmovies.R;
 import com.supraja_y.popularmovies.RetroFit.MovieDBAPI;
-import com.supraja_y.popularmovies.common.FavoritesStorage;
+import com.supraja_y.popularmovies.data.MovieContract;
+import com.supraja_y.popularmovies.data.MoviesProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +46,7 @@ import retrofit.Response;
 import retrofit.Retrofit;
 
 
-public class movListActivity extends AppCompatActivity implements movDetailsFragment.Callbacks {
+public class movListActivity extends AppCompatActivity {
 
     ArrayList<movModel> popularArrayList;
     ArrayList<movModel> ratedArrayList;
@@ -51,6 +55,7 @@ public class movListActivity extends AppCompatActivity implements movDetailsFrag
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
+    Cursor favoriteOnly;
 
     public static ProgressBar progressBar;
 
@@ -64,6 +69,8 @@ public class movListActivity extends AppCompatActivity implements movDetailsFrag
     NetworkReceiver networkReceiver;
     @Bind(R.id.recyclerView)
     RecyclerView recyclerView;
+    private String TAG=movListActivity.class.getSimpleName();
+    ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,24 +149,19 @@ public class movListActivity extends AppCompatActivity implements movDetailsFrag
     protected void onResume() {
         super.onResume();
 
-        if(SORT_BY.equals("FAVOURITE_MOVIES"))
-        {
+        if (SORT_BY.equals("FAVOURITE_MOVIES")) {
 
-
-                getFavourites();
-
-        }
-    }
-
-    @Override
-    public void onChangedFavoriteStatus() {
-        Log.e("from mov_listActivity","true");
-        if (mTwoPane) {
 
             getFavourites();
 
         }
     }
+
+//    @Override
+//    public void onChangedFavoriteStatus() {
+//        Log.e("from mov_listActivity", "true");
+//
+//    }
 
 
     private class FetchMoviesFromAPI extends AsyncTask<String, Void,
@@ -310,9 +312,13 @@ public class movListActivity extends AppCompatActivity implements movDetailsFrag
     }
 
     public void getFavourites() {
+
         favArrayList.clear();
-        favArrayList = FavoritesStorage.getFavorites(this);
         Log.d("Size", String.valueOf(favArrayList.size()));
+        favArrayList = MoviesProvider.getFavovies(getBaseContext());
+        if(progressBar.getVisibility()==View.VISIBLE)
+            progressBar.setVisibility(View.GONE);
+
         favouriteAdapter = new movAdapter(this, favArrayList);
         recyclerView.setAdapter(favouriteAdapter);
         Log.d("Array Size", String.valueOf(favArrayList.size()));
@@ -349,5 +355,30 @@ public class movListActivity extends AppCompatActivity implements movDetailsFrag
             Toast.makeText(getApplicationContext(), "Network chnaged", Toast.LENGTH_SHORT).show();
         }
     }
+//    public    ArrayList<movModel> get_fav_movies(Context context) { // Check if movie with passed id is favorite
+//        ArrayList<movModel> movies = new ArrayList<>();
+//
+//        ContentResolver contentResolver = context.getContentResolver();
+//        Cursor c = contentResolver.query(MovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
+//        if (c.getCount() > 0) {
+//            while (c.moveToNext()) {
+//                movModel movie = new movModel();
+//
+//                movie.setId(String.valueOf(c.getInt(1)));
+//                movie.setOriginal_title(c.getString(2));
+//                movie.setOverview(String.valueOf(c.getString(3)));
+//                movie.setBackdrop_path(String.valueOf(c.getString(5)));
+//                movie.setRelease_date(String.valueOf(c.getString(6)));
+//                movie.setVote_average(c.getFloat(4));
+//                movies.add(movie);
+//                Log.d(TAG, "Fetching User from Sqlite: " + movie.getId());
+//
+//            }
+//
+//        }
+//        c.close();
+//
+//        return movies;
+//    }
 
 }
