@@ -1,7 +1,11 @@
 package com.supraja_y.popularmovies.Screens;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,11 +19,14 @@ import com.supraja_y.popularmovies.R;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+import static com.supraja_y.popularmovies.R.id.recyclerView;
+
 
 public class movDetailsActivity extends AppCompatActivity {
 
     @Bind(R.id.toolImage)
     ImageView toolImage;
+    private int mScrollPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +59,8 @@ public class movDetailsActivity extends AppCompatActivity {
 
 
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

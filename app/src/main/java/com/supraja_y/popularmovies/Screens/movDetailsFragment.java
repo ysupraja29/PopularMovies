@@ -12,10 +12,12 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.mikepenz.iconics.IconicsDrawable;
@@ -53,19 +56,22 @@ import retrofit.Retrofit;
 
 
 public class movDetailsFragment extends Fragment {
-
+    private static final String STATE_SCROLL_VIEW = "state_scroll_view";
+    private static final String STATE_TRAILER = "state_trailer";
+    private static final String STATE_REVIEW = "state_review";
 
     private Callbacks mCallbacks = sDummyCallbacks;
     private ContentResolver contentResolver;
+    private int rev_lastFirstVisiblePosition;
+    private int tra_lastFirstVisiblePosition;
 
 
     public movDetailsFragment() {
     }
 
+    ScrollView mScrollView;
     movModel movModel;
-    @Bind(R.id.traRV)
     RecyclerView traRecyclerView;
-    @Bind(R.id.revRV)
     RecyclerView revRecyclerView;
     @Bind(R.id.titleView)
     TextView titleView;
@@ -111,6 +117,7 @@ public class movDetailsFragment extends Fragment {
         mCallbacks = sDummyCallbacks;
     }
 
+
     public interface Callbacks {
         void onChangedFavoriteStatus();
     }
@@ -146,14 +153,35 @@ public class movDetailsFragment extends Fragment {
         (new FetchTrailers()).execute(movModel.getId());
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.mov_details, container, false);
         ButterKnife.bind(this, rootView);
+        setRetainInstance(true);
+
+        mScrollView= (ScrollView) rootView.findViewById(R.id.movie_scroll_view);
+        traRecyclerView=(RecyclerView) rootView.findViewById(R.id.traRV);
+        revRecyclerView=(RecyclerView) rootView.findViewById(R.id.revRV);
+
         contentResolver = getActivity().getContentResolver();
 
+        if (savedInstanceState != null) {
+            tra_lastFirstVisiblePosition = savedInstanceState.getInt(STATE_TRAILER);
+            rev_lastFirstVisiblePosition = savedInstanceState.getInt(STATE_REVIEW);
 
+            Log.d("restore_trailer_positon",String.valueOf(tra_lastFirstVisiblePosition));
+            Log.d("restore_review_positon",String.valueOf(rev_lastFirstVisiblePosition));
+            final int[] position = savedInstanceState.getIntArray(STATE_SCROLL_VIEW);
+            if (position != null)
+                mScrollView.post(new Runnable() {
+                    public void run() {
+                        mScrollView.scrollTo(position[0], position[1]);
+                    }
+                });
+
+        }
         titleView.setText(movModel.getoriginal_title());
 
         Picasso.with(getActivity()).load(BuildConfig.IMAGE_URL + "/w342" + movModel.getposter_path() + "?api_key?=" + BuildConfig.API_KEY).placeholder(R.drawable.placeholder).error(R.drawable.placeholder).into(imageView);
@@ -164,6 +192,7 @@ public class movDetailsFragment extends Fragment {
         releaseText.setText("Release Date: ".concat(movModel.getrelease_date()));
         if (!isNetworkAvailable())
             extraLayout.setVisibility(View.INVISIBLE);
+
         LinearLayoutManager trailerLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         LinearLayoutManager reviewLayoutManager = new LinearLayoutManager(getContext());
         traRecyclerView.setLayoutManager(trailerLayoutManager);
@@ -192,6 +221,9 @@ public class movDetailsFragment extends Fragment {
                 startActivity(i);
             }
         }));
+        traRecyclerView.getLayoutManager().scrollToPosition(tra_lastFirstVisiblePosition);
+        revRecyclerView.getLayoutManager().scrollToPosition(rev_lastFirstVisiblePosition);
+
         return rootView;
     }
 
@@ -261,7 +293,7 @@ public class movDetailsFragment extends Fragment {
 
                 contentResolver.insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
                 drawable = new IconicsDrawable(getActivity())
-                        .icon(MaterialDesignIconic.Icon.gmi_favorite )
+                        .icon(MaterialDesignIconic.Icon.gmi_favorite)
                         .color(Color.WHITE)
                         .sizeDp(24);
             } else {
@@ -295,6 +327,7 @@ public class movDetailsFragment extends Fragment {
 
         }
     }
+
 
 
     public static boolean isFavorite(Context context, int id) { // Check if movie with passed id is favorite
@@ -397,6 +430,44 @@ public class movDetailsFragment extends Fragment {
                 = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle currentState) {
+        super.onSaveInstanceState(currentState);
+        tra_lastFirstVisiblePosition = ((LinearLayoutManager) traRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        rev_lastFirstVisiblePosition = ((LinearLayoutManager) revRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        Log.d("trailer_positon",String.valueOf(tra_lastFirstVisiblePosition));
+        Log.d("review_positon",String.valueOf(rev_lastFirstVisiblePosition));
+        currentState.putIntArray(STATE_SCROLL_VIEW,
+                new int[]{mScrollView.getScrollX(), mScrollView.getScrollY()});
+        currentState.putInt(STATE_TRAILER, tra_lastFirstVisiblePosition);
+        currentState.putInt(STATE_REVIEW, rev_lastFirstVisiblePosition);
+
+
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            tra_lastFirstVisiblePosition = savedInstanceState.getInt(STATE_TRAILER);
+            rev_lastFirstVisiblePosition = savedInstanceState.getInt(STATE_REVIEW);
+
+            Log.d("restore_trailer_positon",String.valueOf(tra_lastFirstVisiblePosition));
+            Log.d("restore_review_positon",String.valueOf(rev_lastFirstVisiblePosition));
+            final int[] position = savedInstanceState.getIntArray(STATE_SCROLL_VIEW);
+            if (position != null)
+                mScrollView.post(new Runnable() {
+                    public void run() {
+                        mScrollView.scrollTo(position[0], position[1]);
+                    }
+                });
+            traRecyclerView.getLayoutManager().scrollToPosition(tra_lastFirstVisiblePosition);
+            revRecyclerView.getLayoutManager().scrollToPosition(rev_lastFirstVisiblePosition);
+
+        }
     }
 
 

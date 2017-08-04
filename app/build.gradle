@@ -54,5 +54,7 @@ dependencies {
     compile "com.mikepenz:iconics-core:2.9.0@aar"
     compile 'com.mikepenz:google-material-typeface:3.0.1.1.original@aar'
     compile 'com.mikepenz:material-design-iconic-typeface:2.2.0.3@aar'
+    compile 'com.github.ksoichiro:android-observablescrollview:1.5.2'
+
     testCompile 'junit:junit:4.12'
 }
